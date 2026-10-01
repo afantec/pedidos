@@ -1,0 +1,76 @@
+# Esteira CI/CD no GitHub Actions - deploy e rollback
+#
+# Disparado pelo painel da esteira (ou manualmente em Actions > deploy > Run workflow).
+# Roda no runner self-hosted do servidor e usa os mesmos scripts da esteira do GitLab.
+#
+# Os valores de deploy vêm das variáveis do repositório (Settings > Secrets and variables >
+# Actions > Variables), gravadas pelo cadastro do painel. Os valores abaixo são só o padrão.
+name: deploy
+run-name: ${{ inputs.acao }} ${{ inputs.versao }}     # o painel lê a ação e a versão por aqui
+
+on:
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: deploy ou rollback
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+      versao:
+        description: ID da execução do workflow ci com o app.jar (só para deploy)
+        default: '-'
+      sha:
+        description: Commit da versão (só para deploy)
+        default: ''
+
+permissions:
+  contents: read
+  actions: read          # baixar o app.jar de outra execução
+
+concurrency:
+  group: deploy-${{ vars.DEPLOY_ENVIRONMENT || 'producao' }}     # um deploy por vez
+  cancel-in-progress: false
+
+env:
+  SERVICE_NAME: ${{ vars.SERVICE_NAME || 'pedidos' }}
+  APP_PORT: ${{ vars.APP_PORT || '8081' }}
+  BASE_DIR: ${{ vars.BASE_DIR || '/opt/microsservicos/pedidos' }}
+  HEALTH_URL: ${{ vars.HEALTH_URL || 'http://localhost:8081/actuator/health' }}
+  HEALTH_TIMEOUT: ${{ vars.HEALTH_TIMEOUT || '120' }}
+  HEALTH_INTERVAL: '5'
+  KEEP_RELEASES: ${{ vars.KEEP_RELEASES || '5' }}
+  DEPLOY_AUTOMATICO: 'false'
+
+jobs:
+  deploy:
+    if: inputs.acao == 'deploy'
+    runs-on: [self-hosted, "${{ vars.DEPLOY_RUNNER_TAG || 'meu-runner' }}"]
+    environment: ${{ vars.DEPLOY_ENVIRONMENT || 'producao' }}
+    steps:
+      - name: Confere a versão
+        run: |
+          [[ "${{ inputs.versao }}" =~ ^[0-9]+$ ]] || { echo "informe em 'versao' o ID da execução do ci"; exit 1; }
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha || github.sha }}     # scripts da mesma versão do app.jar
+      - name: Baixa o app.jar da versão
+        uses: actions/download-artifact@v8
+        with:
+          name: app-jar
+          path: target
+          run-id: ${{ inputs.versao }}
+          github-token: ${{ github.token }}
+      - name: Deploy com health check e rollback automático
+        run: bash scripts/deploy.sh target/app.jar
+        env:
+          VERSAO_ID: ${{ inputs.versao }}
+          VERSAO_SHA: ${{ inputs.sha }}
+
+  rollback:
+    if: inputs.acao == 'rollback'
+    runs-on: [self-hosted, "${{ vars.DEPLOY_RUNNER_TAG || 'meu-runner' }}"]
+    environment: ${{ vars.DEPLOY_ENVIRONMENT || 'producao' }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Troca a versão no ar pela anterior
+        run: bash scripts/rollback.sh

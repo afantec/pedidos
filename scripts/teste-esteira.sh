@@ -100,6 +100,12 @@ check "restam 5"          "$(ls $BASE_DIR/releases | wc -l)" 5
 check "atual=207"         "$(link atual)" 207
 check "anterior existe"   "$(test -d $BASE_DIR/$(readlink $BASE_DIR/anterior) && echo s)" s
 
+echo "Metadados no formato do GitHub Actions"
+VERSAO_ID=555 VERSAO_SHA=abc123 GITHUB_ACTOR=ana bash $S/deploy.sh /tmp/ok.jar > /tmp/out 2>&1; check "exit 0" "$?" 0
+meta() { sed -n "s/^$1=//p" "$BASE_DIR/atual/RELEASE"; }
+check "RELEASE"           "$(meta pipeline) $(meta commit) $(meta autor)" "555 abc123 ana"
+check "atual=555"         "$(link atual)" 555
+
 echo "T11 primeiro deploy com falha";  reset
 check "exit 1"            "$(deploy 300 bad)" 1
 check "mensagem"          "$(grep -c 'não há versão anterior' /tmp/out)" 1

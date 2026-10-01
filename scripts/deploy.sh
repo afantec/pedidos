@@ -5,7 +5,11 @@ source "$(dirname "$0")/lib.sh"
 
 JAR_SRC="${1:?informe o caminho do jar}"
 KEEP_RELEASES="${KEEP_RELEASES:-5}"
-RELEASE_NAME="$(date +%Y%m%d-%H%M%S)_p${CI_PIPELINE_ID:-manual}"
+# Metadados da versão: GitLab CI ou GitHub Actions (o workflow define VERSAO_ID e VERSAO_SHA)
+VERSAO_ID="${CI_PIPELINE_ID:-${VERSAO_ID:-manual}}"
+VERSAO_SHA="${CI_COMMIT_SHA:-${VERSAO_SHA:-desconhecido}}"
+AUTOR="${GITLAB_USER_LOGIN:-${GITHUB_ACTOR:-desconhecido}}"
+RELEASE_NAME="$(date +%Y%m%d-%H%M%S)_p${VERSAO_ID}"
 RELEASE_REL="releases/$RELEASE_NAME"
 RELEASE_DIR="$BASE_DIR/$RELEASE_REL"
 
@@ -20,9 +24,9 @@ OLD_PREVIOUS="$(readlink "$BASE_DIR/anterior" 2>/dev/null || true)"
 #    pelo painel da esteira, quem escolhe a versão é a pessoa, e voltar versão é permitido.
 CURRENT_PIPELINE="$(release_pipeline "$CURRENT")"
 if [[ "${DEPLOY_AUTOMATICO:-false}" == true && "${FORCE_DEPLOY:-0}" != 1 \
-      && "${CI_PIPELINE_ID:-}" =~ ^[0-9]+$ && "$CURRENT_PIPELINE" =~ ^[0-9]+$ ]] \
-   && (( CI_PIPELINE_ID < CURRENT_PIPELINE )); then
-  log "pipeline $CI_PIPELINE_ID é mais antigo que o que está no ar ($CURRENT_PIPELINE): deploy recusado"
+      && "$VERSAO_ID" =~ ^[0-9]+$ && "$CURRENT_PIPELINE" =~ ^[0-9]+$ ]] \
+   && (( VERSAO_ID < CURRENT_PIPELINE )); then
+  log "pipeline $VERSAO_ID é mais antigo que o que está no ar ($CURRENT_PIPELINE): deploy recusado"
   exit 1
 fi
 
@@ -30,9 +34,9 @@ fi
 mkdir -p "$RELEASE_DIR"
 install -m 0644 "$JAR_SRC" "$RELEASE_DIR/app.jar"
 cat > "$RELEASE_DIR/RELEASE" <<EOF
-commit=${CI_COMMIT_SHA:-desconhecido}
-pipeline=${CI_PIPELINE_ID:-manual}
-autor=${GITLAB_USER_LOGIN:-desconhecido}
+commit=$VERSAO_SHA
+pipeline=$VERSAO_ID
+autor=$AUTOR
 data=$(date -Iseconds)
 EOF
 

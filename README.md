@@ -80,3 +80,18 @@ Como root, no servidor de destino: `infra/preparar-servidor.sh`, depois preenche
   ```bash
   docker run --rm -v "$PWD/scripts:/scripts:ro" --entrypoint bash debian:bookworm-slim /scripts/teste-esteira.sh
   ```
+
+## GitHub Actions
+
+O mesmo fluxo da esteira, para quando o repositório está no GitHub:
+
+| Workflow | Quando roda | O que faz |
+| --- | --- | --- |
+| [ci.yml](.github/workflows/ci.yml) | Pull request e push na `main` | `test` (com Testcontainers, em runner do GitHub). No push, também `package`, que guarda o `app.jar` como artefato `app-jar` por 30 dias |
+| [deploy.yml](.github/workflows/deploy.yml) | Disparado pelo painel da esteira, ou em *Actions → deploy → Run workflow* | `acao=deploy`: baixa o `app-jar` da execução `versao` e roda `scripts/deploy.sh`. `acao=rollback`: roda `scripts/rollback.sh`. Executa no runner *self-hosted* do servidor |
+
+Os valores de deploy vêm das *Actions variables* do repositório, gravadas pelo cadastro do painel. No servidor:
+
+```bash
+RUNNER_USER=<usuário do runner do GitHub> infra/preparar-servidor.sh
+```
