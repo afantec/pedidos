@@ -1,0 +1,21 @@
+# /etc/systemd/system/pedidos.service
+[Unit]
+Description=Microsserviço pedidos
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+User=svc-pedidos
+Group=svc-pedidos
+WorkingDirectory=/opt/microsservicos/pedidos
+EnvironmentFile=/opt/microsservicos/pedidos/shared/app.env
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/microsservicos/pedidos/atual/app.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

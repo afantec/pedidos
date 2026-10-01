@@ -1,0 +1,26 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces"
+                template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="titulo">Início</ui:define>
+
+    <ui:define name="conteudo">
+        <h1>Resumo de pedidos</h1>
+        <div class="cards">
+            <p:card title="Abertos">
+                <div class="numero">#{inicioView.abertos}</div>
+            </p:card>
+            <p:card title="Confirmados">
+                <div class="numero">#{inicioView.confirmados}</div>
+            </p:card>
+            <p:card title="Cancelados">
+                <div class="numero">#{inicioView.cancelados}</div>
+            </p:card>
+        </div>
+        <p style="margin-top: 1.5rem">
+            <p:linkButton value="Novo pedido" outcome="/pedido" icon="pi pi-plus"/>
+        </p>
+    </ui:define>
+</ui:composition>

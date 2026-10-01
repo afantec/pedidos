@@ -1,0 +1,52 @@
+server:
+  port: ${APP_PORT:8080}
+  shutdown: graceful
+  servlet:
+    session:
+      tracking-modes: cookie     # sem jsessionid na URL
+
+spring:
+  application:
+    name: pedidos
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  flyway:
+    enabled: true
+    schemas: ${DB_SCHEMA:pedidos}
+    default-schema: ${DB_SCHEMA:pedidos}
+    create-schemas: false        # o esquema é criado pelo DBA (db/setup-banco.sql)
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate         # o esquema é responsabilidade do Flyway
+    properties:
+      hibernate:
+        default_schema: ${DB_SCHEMA:pedidos}
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+
+joinfaces:
+  faces:
+    project-stage: production
+  primefaces:
+    theme: saga
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    build:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

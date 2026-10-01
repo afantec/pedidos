@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+<f:view locale="pt_BR">
+    <ui:insert name="metadata"/>
+    <h:head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title><ui:insert name="titulo">Pedidos</ui:insert> · Pedidos</title>
+        <style>
+            body { margin: 0; font-family: var(--font-family, sans-serif); background: var(--surface-ground, #f8f9fa); }
+            .conteudo { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+            .conteudo h1 { font-size: 1.5rem; margin: .5rem 0 1rem; }
+            .barra { display: flex; gap: .5rem; align-items: end; flex-wrap: wrap; margin-bottom: 1rem; }
+            .barra .campo { display: flex; flex-direction: column; gap: .25rem; }
+            .form-grid { display: grid; grid-template-columns: 1fr; gap: .75rem; min-width: min(420px, 85vw); }
+            .form-grid .campo { display: flex; flex-direction: column; gap: .25rem; }
+            .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+            .numero { font-size: 2rem; font-weight: 600; }
+            .direita { text-align: right; }
+        </style>
+    </h:head>
+    <h:body>
+        <h:form id="menu">
+            <p:menubar>
+                <p:menuitem value="Início" outcome="/index" icon="pi pi-home"/>
+                <p:menuitem value="Pedidos" outcome="/pedidos" icon="pi pi-shopping-cart"/>
+                <p:menuitem value="Clientes" outcome="/clientes" icon="pi pi-users"/>
+                <p:menuitem value="Produtos" outcome="/produtos" icon="pi pi-box"/>
+                <f:facet name="options">
+                    <p:linkButton value="API" href="#{request.contextPath}/swagger-ui.html"
+                                  icon="pi pi-code" styleClass="ui-button-flat" target="_blank"/>
+                </f:facet>
+            </p:menubar>
+        </h:form>
+        <div class="conteudo">
+            <p:growl id="mensagens" showDetail="false" life="5000">
+                <p:autoUpdate/>
+            </p:growl>
+            <ui:insert name="conteudo"/>
+        </div>
+    </h:body>
+</f:view>
+</html>

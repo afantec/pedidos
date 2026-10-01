@@ -1,0 +1,80 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces"
+                template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="titulo">Pedidos</ui:define>
+
+    <ui:define name="conteudo">
+        <h1>Pedidos</h1>
+
+        <h:form id="lista">
+            <div class="barra">
+                <div class="campo">
+                    <p:outputLabel for="status" value="Situação"/>
+                    <p:selectOneMenu id="status" value="#{pedidoListaView.status}" style="width: 11rem">
+                        <f:selectItem itemLabel="Todas" noSelectionOption="true"/>
+                        <f:selectItems value="#{pedidoListaView.statusDisponiveis}" var="s"
+                                       itemValue="#{s}" itemLabel="#{s.descricao}"/>
+                        <p:ajax update="tabela"/>
+                    </p:selectOneMenu>
+                </div>
+                <div class="campo">
+                    <p:outputLabel for="cliente" value="Cliente"/>
+                    <p:selectOneMenu id="cliente" value="#{pedidoListaView.clienteId}" filter="true"
+                                     filterMatchMode="contains" style="width: 18rem">
+                        <f:selectItem itemLabel="Todos" noSelectionOption="true"/>
+                        <f:selectItems value="#{pedidoListaView.clientes}" var="c"
+                                       itemValue="#{c.id}" itemLabel="#{c.nome}"/>
+                        <p:ajax update="tabela"/>
+                    </p:selectOneMenu>
+                </div>
+                <p:linkButton value="Novo pedido" outcome="/pedido" icon="pi pi-plus"/>
+            </div>
+
+            <p:dataTable id="tabela" value="#{pedidoListaView.pedidos}" var="p" lazy="true"
+                         paginator="true" rows="20" rowsPerPageTemplate="20,50,100"
+                         emptyMessage="Nenhum pedido encontrado." size="small" stripedRows="true">
+                <p:column headerText="Nº" style="width: 5rem">#{p.id}</p:column>
+                <p:column headerText="Cliente">#{p.cliente.nome}</p:column>
+                <p:column headerText="Criado em" style="width: 10rem">
+                    <h:outputText value="#{p.criadoEm}">
+                        <f:converter converterId="dataHora"/>
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Situação" style="width: 8rem">
+                    <p:tag value="#{p.status.descricao}"
+                           severity="#{p.status == 'CONFIRMADO' ? 'success' : (p.status == 'CANCELADO' ? 'danger' : 'info')}"/>
+                </p:column>
+                <p:column headerText="Total" style="width: 9rem" styleClass="direita">
+                    <h:outputText value="#{p.total}">
+                        <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                    </h:outputText>
+                </p:column>
+                <p:column style="width: 9rem" styleClass="direita">
+                    <p:linkButton icon="pi #{p.editavel ? 'pi-pencil' : 'pi-eye'}" title="#{p.editavel ? 'Editar' : 'Ver'}"
+                                  outcome="/pedido" styleClass="rounded-button ui-button-flat">
+                        <f:param name="id" value="#{p.id}"/>
+                    </p:linkButton>
+                    <p:commandButton icon="pi pi-check" title="Confirmar" rendered="#{p.editavel}"
+                                     styleClass="rounded-button ui-button-flat ui-button-success"
+                                     action="#{pedidoListaView.confirmar(p)}" process="@this" update="tabela">
+                        <p:confirm header="Confirmar pedido" message="Confirmar o pedido #{p.id}?" icon="pi pi-question-circle"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-times" title="Cancelar" rendered="#{p.status != 'CANCELADO'}"
+                                     styleClass="rounded-button ui-button-flat ui-button-danger"
+                                     action="#{pedidoListaView.cancelar(p)}" process="@this" update="tabela">
+                        <p:confirm header="Cancelar pedido" message="Cancelar o pedido #{p.id}?" icon="pi pi-exclamation-triangle"/>
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade">
+                <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
+                <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes"/>
+            </p:confirmDialog>
+        </h:form>
+    </ui:define>
+</ui:composition>

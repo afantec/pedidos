@@ -1,0 +1,100 @@
+# Esteira CI/CD - microsserviço Spring Boot (Java 21 + PrimeFaces embarcado)
+#
+# Merge Request: test + package (é o pipeline exigido para aprovar o merge)
+# Push na main:  test + package; deploy e rollback_manual ficam aguardando liberação,
+#                feita pelo painel da esteira (sistema "esteira") ou pelo próprio GitLab
+#
+# Os valores de deploy (SERVICE_NAME, APP_PORT, BASE_DIR, HEALTH_URL, DEPLOY_BRANCH...) são
+# cadastrados no painel da esteira, que os grava como variáveis de CI/CD do projeto. Elas têm
+# precedência sobre as definidas abaixo, que servem só de valor padrão.
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $DEPLOY_BRANCH
+
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  SERVICE_NAME: "pedidos"
+  APP_PORT: "8081"
+  BASE_DIR: "/opt/microsservicos/${SERVICE_NAME}"
+  HEALTH_URL: "http://localhost:${APP_PORT}/actuator/health"
+  HEALTH_TIMEOUT: "120"   # segundos até desistir e fazer rollback
+  HEALTH_INTERVAL: "5"    # segundos entre tentativas
+  KEEP_RELEASES: "5"
+  MAVEN_OPTS: "-Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --show-version"
+  # Runner de test/package. Um runner "protected" não executa pipelines de MR, então
+  # MRs precisam de um runner de build sem essa marcação (decisão D1 da análise).
+  # Enquanto só existir o runner de produção, os dois valores são iguais.
+  BUILD_RUNNER_TAG: "meu-runner"
+  DEPLOY_RUNNER_TAG: "meu-runner"
+  DEPLOY_BRANCH: "main"
+  DEPLOY_ENVIRONMENT: "producao"
+  # "true" só se o deploy voltar a ser automático: ativa a recusa de pipeline desatualizado
+  DEPLOY_AUTOMATICO: "false"
+
+.cache_build: &cache_build
+  cache:
+    key:
+      files: [pom.xml]
+    paths:
+      - .m2/repository/
+
+test:
+  stage: test
+  tags: [$BUILD_RUNNER_TAG]
+  <<: *cache_build
+  script:
+    - mvn $MAVEN_CLI_OPTS clean verify
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+        - target/failsafe-reports/TEST-*.xml
+
+package:
+  stage: build
+  tags: [$BUILD_RUNNER_TAG]
+  <<: *cache_build
+  script:
+    - mvn $MAVEN_CLI_OPTS clean package -DskipTests
+  artifacts:
+    paths:
+      - target/app.jar
+    expire_in: 30 days   # versões mais antigas que isso não podem mais ser implantadas
+
+deploy:
+  stage: deploy
+  tags: [$DEPLOY_RUNNER_TAG]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $DEPLOY_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
+      when: manual          # liberado pelo painel da esteira
+      allow_failure: true   # pipeline fica verde sem esperar a liberação
+  needs: [test, package]
+  resource_group: producao          # um deploy por vez; ver process_mode no README.md
+  environment:
+    name: $DEPLOY_ENVIRONMENT
+  cache: []
+  script:
+    - bash scripts/deploy.sh target/app.jar
+
+rollback_manual:
+  stage: deploy
+  tags: [$DEPLOY_RUNNER_TAG]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $DEPLOY_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
+      when: manual
+      allow_failure: true
+  needs: []
+  resource_group: producao
+  environment:
+    name: $DEPLOY_ENVIRONMENT
+  cache: []
+  script:
+    - bash scripts/rollback.sh

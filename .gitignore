@@ -1,0 +1,7 @@
+target/
+.m2/
+.idea/
+*.iml
+.vscode/
+config/application-local.yml
+config/ajuste-banco-local.sql

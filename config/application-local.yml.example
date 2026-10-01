@@ -1,0 +1,14 @@
+# Copie para config/application-local.yml (fora do Git) e rode com o perfil "local".
+# O Spring Boot lê ./config/ automaticamente a partir do diretório de trabalho.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/plataforma
+    username: pedidos_app
+    password: TROQUE_PELA_SENHA_DO_SETUP
+  flyway:
+    # carga de exemplo, só no ambiente local
+    locations: classpath:db/migration,classpath:db/dev-data
+
+joinfaces:
+  faces:
+    project-stage: development

@@ -1,0 +1,90 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces"
+                template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="titulo">Produtos</ui:define>
+
+    <ui:define name="conteudo">
+        <h1>Produtos</h1>
+
+        <h:form id="lista">
+            <div class="barra">
+                <p:commandButton value="Novo produto" icon="pi pi-plus"
+                                 action="#{produtoView.novo}" process="@this"
+                                 update=":edicao" oncomplete="PF('dlgProduto').show()">
+                    <p:resetInput target=":edicao"/>
+                </p:commandButton>
+            </div>
+
+            <p:dataTable id="tabela" value="#{produtoView.produtos}" var="p" paginator="true" rows="15"
+                         emptyMessage="Nenhum produto cadastrado." size="small" stripedRows="true">
+                <p:column headerText="Código" sortBy="#{p.codigo}" filterBy="#{p.codigo}"
+                          filterMatchMode="contains" style="width: 10rem">
+                    #{p.codigo}
+                </p:column>
+                <p:column headerText="Descrição" sortBy="#{p.descricao}" filterBy="#{p.descricao}"
+                          filterMatchMode="contains">
+                    #{p.descricao}
+                </p:column>
+                <p:column headerText="Preço" sortBy="#{p.preco}" style="width: 9rem" styleClass="direita">
+                    <h:outputText value="#{p.preco}">
+                        <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                    </h:outputText>
+                </p:column>
+                <p:column headerText="Situação" style="width: 7rem">
+                    <p:tag value="#{p.ativo ? 'Ativo' : 'Inativo'}" severity="#{p.ativo ? 'success' : 'secondary'}"/>
+                </p:column>
+                <p:column style="width: 7rem" styleClass="direita">
+                    <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button ui-button-flat"
+                                     action="#{produtoView.editar(p)}" process="@this"
+                                     update=":edicao" oncomplete="PF('dlgProduto').show()">
+                        <p:resetInput target=":edicao"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-trash" title="Excluir"
+                                     styleClass="rounded-button ui-button-flat ui-button-danger"
+                                     action="#{produtoView.excluir(p)}" process="@this" update="tabela">
+                        <p:confirm header="Excluir produto" message="Excluir #{p.descricao}?" icon="pi pi-exclamation-triangle"/>
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade">
+                <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
+                <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <p:dialog header="Produto" widgetVar="dlgProduto" modal="true" resizable="false" responsive="true">
+            <h:form id="edicao">
+                <div class="form-grid">
+                    <div class="campo">
+                        <p:outputLabel for="codigo" value="Código"/>
+                        <p:inputText id="codigo" value="#{produtoView.edicao.codigo}" required="true" maxlength="30"/>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="descricao" value="Descrição"/>
+                        <p:inputText id="descricao" value="#{produtoView.edicao.descricao}" required="true" maxlength="200"/>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="preco" value="Preço"/>
+                        <p:inputNumber id="preco" value="#{produtoView.edicao.preco}" required="true"
+                                       symbol="R$ " decimalSeparator="," thousandSeparator="." minValue="0"
+                                       decimalPlaces="2"/>
+                    </div>
+                    <div class="campo">
+                        <p:selectBooleanCheckbox id="ativo" value="#{produtoView.edicao.ativo}" itemLabel="Ativo"/>
+                    </div>
+                </div>
+                <div class="barra" style="justify-content: flex-end; margin-top: 1rem">
+                    <p:commandButton value="Cancelar" type="button" styleClass="ui-button-flat"
+                                     onclick="PF('dlgProduto').hide()"/>
+                    <p:commandButton value="Salvar" icon="pi pi-check" action="#{produtoView.salvar}"
+                                     process="@form" update="@form :lista:tabela"/>
+                </div>
+            </h:form>
+        </p:dialog>
+    </ui:define>
+</ui:composition>

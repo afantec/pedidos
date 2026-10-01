@@ -1,0 +1,3 @@
+# /etc/sudoers.d/gitlab-runner-pedidos  (editar com: visudo -f /etc/sudoers.d/gitlab-runner-pedidos)
+# reset-failed: zera o limite de reinícios do systemd antes de cada restart (deploy e rollback)
+gitlab-runner ALL=(root) NOPASSWD: /usr/bin/systemctl restart pedidos.service, /usr/bin/systemctl reset-failed pedidos.service

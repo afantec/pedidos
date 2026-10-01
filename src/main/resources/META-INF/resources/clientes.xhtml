@@ -1,0 +1,80 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces"
+                template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="titulo">Clientes</ui:define>
+
+    <ui:define name="conteudo">
+        <h1>Clientes</h1>
+
+        <h:form id="lista">
+            <div class="barra">
+                <p:commandButton value="Novo cliente" icon="pi pi-plus"
+                                 action="#{clienteView.novo}" process="@this"
+                                 update=":edicao" oncomplete="PF('dlgCliente').show()">
+                    <p:resetInput target=":edicao"/>
+                </p:commandButton>
+            </div>
+
+            <p:dataTable id="tabela" value="#{clienteView.clientes}" var="c" paginator="true" rows="15"
+                         emptyMessage="Nenhum cliente cadastrado." size="small" stripedRows="true">
+                <p:column headerText="Nome" sortBy="#{c.nome}" filterBy="#{c.nome}" filterMatchMode="contains">
+                    #{c.nome}
+                </p:column>
+                <p:column headerText="CPF/CNPJ" style="width: 11rem">#{c.documento}</p:column>
+                <p:column headerText="E-mail">#{c.email}</p:column>
+                <p:column headerText="Situação" style="width: 7rem">
+                    <p:tag value="#{c.ativo ? 'Ativo' : 'Inativo'}" severity="#{c.ativo ? 'success' : 'secondary'}"/>
+                </p:column>
+                <p:column style="width: 7rem" styleClass="direita">
+                    <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="rounded-button ui-button-flat"
+                                     action="#{clienteView.editar(c)}" process="@this"
+                                     update=":edicao" oncomplete="PF('dlgCliente').show()">
+                        <p:resetInput target=":edicao"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-trash" title="Excluir"
+                                     styleClass="rounded-button ui-button-flat ui-button-danger"
+                                     action="#{clienteView.excluir(c)}" process="@this" update="tabela">
+                        <p:confirm header="Excluir cliente" message="Excluir #{c.nome}?" icon="pi pi-exclamation-triangle"/>
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog global="true" showEffect="fade">
+                <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
+                <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <p:dialog header="Cliente" widgetVar="dlgCliente" modal="true" resizable="false" responsive="true">
+            <h:form id="edicao">
+                <div class="form-grid">
+                    <div class="campo">
+                        <p:outputLabel for="nome" value="Nome"/>
+                        <p:inputText id="nome" value="#{clienteView.edicao.nome}" required="true" maxlength="150"/>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="documento" value="CPF ou CNPJ (somente números)"/>
+                        <p:inputText id="documento" value="#{clienteView.edicao.documento}" required="true" maxlength="18"/>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="email" value="E-mail"/>
+                        <p:inputText id="email" value="#{clienteView.edicao.email}" maxlength="150" type="email"/>
+                    </div>
+                    <div class="campo">
+                        <p:selectBooleanCheckbox id="ativo" value="#{clienteView.edicao.ativo}" itemLabel="Ativo"/>
+                    </div>
+                </div>
+                <div class="barra" style="justify-content: flex-end; margin-top: 1rem">
+                    <p:commandButton value="Cancelar" type="button" styleClass="ui-button-flat"
+                                     onclick="PF('dlgCliente').hide()"/>
+                    <p:commandButton value="Salvar" icon="pi pi-check" action="#{clienteView.salvar}"
+                                     process="@form" update="@form :lista:tabela"/>
+                </div>
+            </h:form>
+        </p:dialog>
+    </ui:define>
+</ui:composition>

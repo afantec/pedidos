@@ -1,0 +1,108 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces"
+                template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="titulo">Pedido</ui:define>
+
+    <ui:define name="metadata">
+        <f:metadata>
+            <f:viewParam name="id" value="#{pedidoFormView.id}"/>
+            <f:viewAction action="#{pedidoFormView.carregar}"/>
+        </f:metadata>
+    </ui:define>
+
+    <ui:define name="conteudo">
+        <h1>
+            <h:outputText value="Novo pedido" rendered="#{empty pedidoFormView.id}"/>
+            <h:outputText value="Pedido #{pedidoFormView.id}" rendered="#{not empty pedidoFormView.id}"/>
+            <p:tag value="#{pedidoFormView.status.descricao}" rendered="#{not empty pedidoFormView.status}"
+                   style="margin-left: .5rem; vertical-align: middle"/>
+        </h1>
+
+        <h:form id="form">
+            <p:panel header="Dados do pedido">
+                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))">
+                    <div class="campo">
+                        <p:outputLabel for="cliente" value="Cliente"/>
+                        <p:selectOneMenu id="cliente" value="#{pedidoFormView.clienteId}" required="true"
+                                         filter="true" filterMatchMode="contains"
+                                         disabled="#{not pedidoFormView.editavel}">
+                            <f:selectItem itemLabel="Selecione" noSelectionOption="true"/>
+                            <f:selectItems value="#{pedidoFormView.clientes}" var="c"
+                                           itemValue="#{c.id}" itemLabel="#{c.nome}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="observacao" value="Observação"/>
+                        <p:inputText id="observacao" value="#{pedidoFormView.observacao}" maxlength="500"
+                                     disabled="#{not pedidoFormView.editavel}"/>
+                    </div>
+                </div>
+            </p:panel>
+
+            <p:panel header="Itens" style="margin-top: 1rem">
+                <h:panelGroup id="novoItem" layout="block" styleClass="barra" rendered="#{pedidoFormView.editavel}">
+                    <div class="campo">
+                        <p:outputLabel for="produto" value="Produto"/>
+                        <p:selectOneMenu id="produto" value="#{pedidoFormView.produtoId}" filter="true"
+                                         filterMatchMode="contains" style="width: 22rem">
+                            <f:selectItem itemLabel="Selecione" noSelectionOption="true"/>
+                            <f:selectItems value="#{pedidoFormView.produtos}" var="p" itemValue="#{p.id}"
+                                           itemLabel="#{p.codigo} - #{p.descricao}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="quantidade" value="Quantidade"/>
+                        <p:spinner id="quantidade" value="#{pedidoFormView.quantidade}" min="1" max="100000"/>
+                    </div>
+                    <p:commandButton value="Adicionar" icon="pi pi-plus" action="#{pedidoFormView.adicionarItem}"
+                                     process="novoItem" update="novoItem itens"/>
+                </h:panelGroup>
+
+                <p:dataTable id="itens" value="#{pedidoFormView.itens}" var="i" size="small"
+                             emptyMessage="Nenhum item adicionado.">
+                    <p:column headerText="Código" style="width: 8rem">#{i.codigo}</p:column>
+                    <p:column headerText="Descrição">#{i.descricao}</p:column>
+                    <p:column headerText="Preço" style="width: 9rem" styleClass="direita">
+                        <h:outputText value="#{i.preco}">
+                            <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column headerText="Qtd." style="width: 9rem">
+                        <p:spinner value="#{i.quantidade}" min="1" max="100000" rendered="#{pedidoFormView.editavel}">
+                            <p:ajax process="@this" update=":form:itens"/>
+                        </p:spinner>
+                        <h:outputText value="#{i.quantidade}" rendered="#{not pedidoFormView.editavel}"/>
+                    </p:column>
+                    <p:column headerText="Subtotal" style="width: 9rem" styleClass="direita">
+                        <h:outputText id="subtotal" value="#{i.subtotal}">
+                            <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                        </h:outputText>
+                    </p:column>
+                    <p:column style="width: 4rem" rendered="#{pedidoFormView.editavel}">
+                        <p:commandButton icon="pi pi-trash" title="Remover"
+                                         styleClass="rounded-button ui-button-flat ui-button-danger"
+                                         action="#{pedidoFormView.removerItem(i)}" process="@this" update="itens"/>
+                    </p:column>
+                    <f:facet name="footer">
+                        <div class="direita">
+                            Total:
+                            <h:outputText id="total" value="#{pedidoFormView.total}" style="font-weight: 600">
+                                <f:convertNumber type="currency" currencySymbol="R$" locale="pt_BR"/>
+                            </h:outputText>
+                        </div>
+                    </f:facet>
+                </p:dataTable>
+            </p:panel>
+
+            <div class="barra" style="justify-content: flex-end; margin-top: 1rem">
+                <p:linkButton value="Voltar" outcome="/pedidos" styleClass="ui-button-flat"/>
+                <p:commandButton value="Salvar" icon="pi pi-check" rendered="#{pedidoFormView.editavel}"
+                                 action="#{pedidoFormView.salvar}" process="@form" update="@form"/>
+            </div>
+        </h:form>
+    </ui:define>
+</ui:composition>
