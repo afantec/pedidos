@@ -21,6 +21,7 @@ public final class ProdutoDtos {
             Boolean ativo) {
     }
 
+    /** TESTE **/
     public record ProdutoResponse(
             Long id, String codigo, String descricao, BigDecimal preco, boolean ativo, OffsetDateTime criadoEm) {
 
