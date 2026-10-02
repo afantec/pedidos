@@ -59,3 +59,19 @@ jobs:
           path: target/app.jar
           retention-days: 30             # versões mais antigas não podem mais ser implantadas
           if-no-files-found: error
+
+  # Deploy automático a cada push: só roda quando o cadastro do serviço no painel da esteira
+  # está com "Implantar automaticamente" ligado (variável DEPLOY_AUTOMATICO=true do repositório).
+  deploy-automatico:
+    needs: package
+    if: github.event_name == 'push' && vars.DEPLOY_AUTOMATICO == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write           # disparar o deploy.yml
+    steps:
+      - name: Dispara o deploy desta versão
+        run: >-
+          gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
+          -f acao=deploy -f versao="$GITHUB_RUN_ID" -f sha="$GITHUB_SHA" -f automatico=true
+        env:
+          GH_TOKEN: ${{ github.token }}

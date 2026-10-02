@@ -63,7 +63,7 @@ Como root, no servidor de destino: `infra/preparar-servidor.sh`, depois preenche
 ## Esteira
 
 - **Merge Request:** roda `test` e `package`.
-- **Push na branch de deploy (`main`):** roda `test` e `package`. O `deploy` fica aguardando liberação, que é feita no painel da esteira ([../esteira](../esteira/)) escolhendo a versão. O rollback também é feito pelo painel.
+- **Push na branch de deploy (`main`):** roda `test` e `package`. Se o cadastro do serviço no painel estiver com **Implantar automaticamente a cada push** ligado, o deploy roda em seguida, sozinho. O `deploy` fica aguardando liberação, que é feita no painel da esteira ([../esteira](../esteira/)) escolhendo a versão. O rollback também é feito pelo painel.
 - **Configuração deste projeto no GitLab:**
   - Serviço cadastrado no painel da esteira (botão Novo serviço), que grava as variáveis de deploy no projeto.
   - Environment `producao` protegido, com quem pode implantar.

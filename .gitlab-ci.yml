@@ -2,7 +2,8 @@
 #
 # Merge Request: test + package (é o pipeline exigido para aprovar o merge)
 # Push na main:  test + package; deploy e rollback_manual ficam aguardando liberação,
-#                feita pelo painel da esteira (sistema "esteira") ou pelo próprio GitLab
+#                feita pelo painel da esteira (sistema "esteira") ou pelo próprio GitLab.
+#                Com DEPLOY_AUTOMATICO=true o deploy roda sozinho logo após o package.
 #
 # Os valores de deploy (SERVICE_NAME, APP_PORT, BASE_DIR, HEALTH_URL, DEPLOY_BRANCH...) são
 # cadastrados no painel da esteira, que os grava como variáveis de CI/CD do projeto. Elas têm
@@ -35,7 +36,8 @@ variables:
   DEPLOY_RUNNER_TAG: "meu-runner"
   DEPLOY_BRANCH: "main"
   DEPLOY_ENVIRONMENT: "producao"
-  # "true" só se o deploy voltar a ser automático: ativa a recusa de pipeline desatualizado
+  # "true": o deploy roda sozinho a cada push e recusa pipeline mais antigo que o no ar.
+  # É gravada pelo cadastro do painel (opção "Implantar automaticamente a cada push").
   DEPLOY_AUTOMATICO: "false"
 
 .cache_build: &cache_build
@@ -73,6 +75,9 @@ deploy:
   stage: deploy
   tags: [$DEPLOY_RUNNER_TAG]
   rules:
+    # "Implantar automaticamente a cada push" ligado no cadastro do painel
+    - if: $CI_COMMIT_BRANCH == $DEPLOY_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event" && $DEPLOY_AUTOMATICO == "true"
+      when: on_success
     - if: $CI_COMMIT_BRANCH == $DEPLOY_BRANCH && $CI_PIPELINE_SOURCE != "merge_request_event"
       when: manual          # liberado pelo painel da esteira
       allow_failure: true   # pipeline fica verde sem esperar a liberação
