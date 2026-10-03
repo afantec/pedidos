@@ -8,6 +8,11 @@
     <ui:define name="titulo">Clientes</ui:define>
 
     <ui:define name="conteudo">
+        <h:outputScript library="js" name="mascaras.js"/>
+        <style>
+            .rotulo-doc { display: flex; align-items: baseline; gap: .5rem; }
+            .tipo-doc { font-size: .85rem; color: #6c757d; }
+        </style>
         <h1>Clientes</h1>
 
         <h:form id="lista">
@@ -24,7 +29,15 @@
                 <p:column headerText="Nome" sortBy="#{c.nome}" filterBy="#{c.nome}" filterMatchMode="contains">
                     #{c.nome}
                 </p:column>
-                <p:column headerText="CPF/CNPJ" style="width: 11rem">#{c.documento}</p:column>
+                <p:column headerText="CPF/CNPJ" sortBy="#{c.documento}"
+                          filterBy="#{clienteView.documentoFormatado(c.documento)}" filterMatchMode="contains"
+                          style="width: 13rem">
+                    #{clienteView.documentoFormatado(c.documento)}
+                </p:column>
+                <p:column headerText="Fone" filterBy="#{clienteView.foneFormatado(c.fone)}" filterMatchMode="contains"
+                          style="width: 10rem">
+                    #{clienteView.foneFormatado(c.fone)}
+                </p:column>
                 <p:column headerText="E-mail">#{c.email}</p:column>
                 <p:column headerText="Situação" style="width: 7rem">
                     <p:tag value="#{c.ativo ? 'Ativo' : 'Inativo'}" severity="#{c.ativo ? 'success' : 'secondary'}"/>
@@ -57,8 +70,19 @@
                         <p:inputText id="nome" value="#{clienteView.edicao.nome}" required="true" maxlength="150"/>
                     </div>
                     <div class="campo">
-                        <p:outputLabel for="documento" value="CPF ou CNPJ (somente números)"/>
-                        <p:inputText id="documento" value="#{clienteView.edicao.documento}" required="true" maxlength="18"/>
+                        <div class="rotulo-doc">
+                            <p:outputLabel for="documento" value="CPF ou CNPJ"/>
+                            <h:panelGroup layout="span" styleClass="tipo-doc">#{clienteView.tipoDocumento}</h:panelGroup>
+                        </div>
+                        <p:inputText id="documento" value="#{clienteView.edicao.documento}" required="true"
+                                     maxlength="18" autocomplete="off" inputmode="numeric"
+                                     onfocus="prepararMascara(this)" oninput="mascaraDocumento(this)"/>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel for="fone" value="Fone"/>
+                        <p:inputText id="fone" value="#{clienteView.edicao.fone}" maxlength="15"
+                                     placeholder="(00) 00000-0000" autocomplete="tel" inputmode="numeric"
+                                     onfocus="prepararMascara(this)" oninput="mascaraCelular(this)"/>
                     </div>
                     <div class="campo">
                         <p:outputLabel for="email" value="E-mail"/>

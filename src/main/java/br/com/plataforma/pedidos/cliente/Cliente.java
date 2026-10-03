@@ -29,6 +29,9 @@ public class Cliente implements Serializable {
     @Column(length = 150)
     private String email;
 
+    @Column(length = 11)
+    private String fone;
+
     @Column(nullable = false)
     private boolean ativo = true;
 
@@ -54,6 +57,9 @@ public class Cliente implements Serializable {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getFone() { return fone; }
+    public void setFone(String fone) { this.fone = fone; }
 
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }

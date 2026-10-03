@@ -79,6 +79,7 @@ public class ClienteService {
     private static void preencher(Cliente cliente, ClienteRequest dados) {
         cliente.setNome(dados.nome().trim());
         cliente.setDocumento(dados.documento());
+        cliente.setFone(dados.fone());
         cliente.setEmail(StringUtils.hasText(dados.email()) ? dados.email().trim() : null);
         cliente.setAtivo(dados.ativo() == null || dados.ativo());
     }

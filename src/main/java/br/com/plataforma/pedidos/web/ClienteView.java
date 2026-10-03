@@ -3,6 +3,7 @@ package br.com.plataforma.pedidos.web;
 import br.com.plataforma.pedidos.cliente.Cliente;
 import br.com.plataforma.pedidos.cliente.ClienteDtos.ClienteRequest;
 import br.com.plataforma.pedidos.cliente.ClienteService;
+import br.com.plataforma.pedidos.comum.Mascaras;
 import jakarta.annotation.PostConstruct;
 import org.joinfaces.viewscope.ViewScope;
 import org.primefaces.PrimeFaces;
@@ -39,14 +40,19 @@ public class ClienteView implements Serializable {
         edicao = new Cliente();
         edicao.setId(c.getId());
         edicao.setNome(c.getNome());
-        edicao.setDocumento(c.getDocumento());
+        edicao.setDocumento(Mascaras.documento(c.getDocumento()));
+        edicao.setFone(Mascaras.celular(c.getFone()));
         edicao.setEmail(c.getEmail());
         edicao.setAtivo(c.isAtivo());
     }
 
     public void salvar() {
-        String documento = edicao.getDocumento() == null ? null : edicao.getDocumento().replaceAll("\\D", "");
-        var dados = new ClienteRequest(edicao.getNome(), documento, edicao.getEmail(), edicao.isAtivo());
+        if (!Mascaras.celularInformadoValido(edicao.getFone())) {
+            Mensagens.erro("Informe um celular com DDD.");
+            return;
+        }
+        var dados = new ClienteRequest(edicao.getNome(), edicao.getDocumento(), edicao.getFone(),
+                edicao.getEmail(), edicao.isAtivo());
         boolean ok = Mensagens.executar(() -> {
             if (edicao.getId() == null) {
                 service.criar(dados);
@@ -66,6 +72,18 @@ public class ClienteView implements Serializable {
             Mensagens.info("Cliente excluído.");
             carregar();
         }
+    }
+
+    public String documentoFormatado(String documento) {
+        return Mascaras.documento(documento);
+    }
+
+    public String foneFormatado(String fone) {
+        return Mascaras.celular(fone);
+    }
+
+    public String getTipoDocumento() {
+        return Mascaras.tipoDocumento(edicao.getDocumento());
     }
 
     public List<Cliente> getClientes() { return clientes; }

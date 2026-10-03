@@ -1,0 +1,2 @@
+UPDATE cliente SET fone = '11987654321' WHERE documento = '52998224725' AND fone IS NULL;
+UPDATE cliente SET fone = '21988887777' WHERE documento = '11222333000181' AND fone IS NULL;
