@@ -15,6 +15,9 @@
     </ui:define>
 
     <ui:define name="conteudo">
+        <style>
+            .miniatura { width: 2rem; height: 2rem; object-fit: cover; border-radius: 4px; vertical-align: middle; }
+        </style>
         <h1>
             <h:outputText value="Novo pedido" rendered="#{empty pedidoFormView.id}"/>
             <h:outputText value="Pedido #{pedidoFormView.id}" rendered="#{not empty pedidoFormView.id}"/>
@@ -47,12 +50,28 @@
                 <h:panelGroup id="novoItem" layout="block" styleClass="barra" rendered="#{pedidoFormView.editavel}">
                     <div class="campo">
                         <p:outputLabel for="produto" value="Produto"/>
-                        <p:selectOneMenu id="produto" value="#{pedidoFormView.produtoId}" filter="true"
-                                         filterMatchMode="contains" style="width: 22rem">
-                            <f:selectItem itemLabel="Selecione" noSelectionOption="true"/>
-                            <f:selectItems value="#{pedidoFormView.produtos}" var="p" itemValue="#{p.id}"
-                                           itemLabel="#{p.codigo} - #{p.descricao}"/>
-                        </p:selectOneMenu>
+                        <div style="display: flex; align-items: center; gap: .5rem">
+                            <p:selectOneMenu id="produto" value="#{pedidoFormView.produtoId}" var="produto"
+                                             filter="true" filterMatchMode="contains" style="min-width: 24rem">
+                                <f:selectItem itemLabel="Selecione" noSelectionOption="true"/>
+                                <f:selectItems value="#{pedidoFormView.produtos}" var="p" itemValue="#{p.id}"
+                                               itemLabel="#{p.codigo} - #{p.descricao}"/>
+                                <p:column style="width: 2.5rem">
+                                    <h:panelGroup rendered="#{pedidoFormView.temImagem(produto)}">
+                                        <img src="#{request.contextPath}/api/v1/produtos/#{produto}/imagem" alt=""
+                                             class="miniatura"/>
+                                    </h:panelGroup>
+                                </p:column>
+                                <p:column>#{pedidoFormView.rotuloProduto(produto)}</p:column>
+                                <p:ajax event="itemSelect" process="@this" update="fotoProduto"/>
+                            </p:selectOneMenu>
+                            <h:panelGroup id="fotoProduto">
+                                <h:panelGroup rendered="#{pedidoFormView.temImagem(pedidoFormView.produtoId)}">
+                                    <img src="#{request.contextPath}/api/v1/produtos/#{pedidoFormView.produtoId}/imagem"
+                                         alt="" class="miniatura"/>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                        </div>
                     </div>
                     <div class="campo">
                         <p:outputLabel for="quantidade" value="Quantidade"/>
@@ -64,6 +83,12 @@
 
                 <p:dataTable id="itens" value="#{pedidoFormView.itens}" var="i" size="small"
                              emptyMessage="Nenhum item adicionado.">
+                    <p:column headerText="" style="width: 3.5rem">
+                        <h:panelGroup rendered="#{i.temImagem}">
+                            <img src="#{request.contextPath}/api/v1/produtos/#{i.produtoId}/imagem" alt=""
+                                 class="miniatura"/>
+                        </h:panelGroup>
+                    </p:column>
                     <p:column headerText="Código" style="width: 8rem">#{i.codigo}</p:column>
                     <p:column headerText="Descrição">#{i.descricao}</p:column>
                     <p:column headerText="Preço" style="width: 9rem" styleClass="direita">

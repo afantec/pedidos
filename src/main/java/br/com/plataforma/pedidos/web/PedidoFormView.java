@@ -61,8 +61,7 @@ public class PedidoFormView implements Serializable {
             status = p.getStatus();
             clienteId = p.getCliente().getId();
             observacao = p.getObservacao();
-            p.getItens().forEach(i -> itens.add(new Linha(i.getProduto().getId(), i.getProduto().getCodigo(),
-                    i.getProduto().getDescricao(), i.getPrecoUnitario(), i.getQuantidade())));
+            p.getItens().forEach(i -> itens.add(linha(i.getProduto(), i.getPrecoUnitario(), i.getQuantidade())));
             if (clientes.stream().noneMatch(c -> c.getId().equals(clienteId))) {
                 clientes.add(0, p.getCliente());   // cliente inativado depois do pedido
             }
@@ -76,9 +75,12 @@ public class PedidoFormView implements Serializable {
         }
         itens.stream().filter(l -> l.getProdutoId().equals(produtoId)).findFirst().ifPresentOrElse(
                 l -> l.setQuantidade(l.getQuantidade() + quantidade),
-                () -> produtos.stream().filter(p -> p.getId().equals(produtoId)).findFirst()
-                        .ifPresent(p -> itens.add(new Linha(p.getId(), p.getCodigo(), p.getDescricao(),
-                                p.getPreco(), quantidade))));
+                () -> {
+                    Produto produto = buscarProduto(produtoId);
+                    if (produto != null) {
+                        itens.add(linha(produto, produto.getPreco(), quantidade));
+                    }
+                });
         produtoId = null;
         quantidade = 1;
     }
@@ -126,6 +128,31 @@ public class PedidoFormView implements Serializable {
     public Long getProdutoId() { return produtoId; }
     public void setProdutoId(Long produtoId) { this.produtoId = produtoId; }
 
+    public boolean temImagem(Long produtoId) {
+        Produto produto = buscarProduto(produtoId);
+        return produto != null && produto.getImagemTipo() != null;
+    }
+
+    public String rotuloProduto(Long produtoId) {
+        if (produtoId == null) {
+            return "Selecione";
+        }
+        Produto produto = buscarProduto(produtoId);
+        return produto == null ? "" : produto.getCodigo() + " — " + produto.getDescricao();
+    }
+
+    private Produto buscarProduto(Long produtoId) {
+        if (produtoId == null || produtos == null) {
+            return null;
+        }
+        return produtos.stream().filter(p -> produtoId.equals(p.getId())).findFirst().orElse(null);
+    }
+
+    private static Linha linha(Produto produto, BigDecimal preco, Integer quantidade) {
+        return new Linha(produto.getId(), produto.getCodigo(), produto.getDescricao(), preco, quantidade,
+                produto.getImagemTipo() != null);
+    }
+
     public Integer getQuantidade() { return quantidade; }
     public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
 
@@ -136,14 +163,16 @@ public class PedidoFormView implements Serializable {
         private final String codigo;
         private final String descricao;
         private final BigDecimal preco;
+        private final boolean temImagem;
         private Integer quantidade;
 
-        Linha(Long produtoId, String codigo, String descricao, BigDecimal preco, Integer quantidade) {
+        Linha(Long produtoId, String codigo, String descricao, BigDecimal preco, Integer quantidade, boolean temImagem) {
             this.produtoId = produtoId;
             this.codigo = codigo;
             this.descricao = descricao;
             this.preco = preco;
             this.quantidade = quantidade;
+            this.temImagem = temImagem;
         }
 
         public BigDecimal getSubtotal() {
@@ -153,6 +182,7 @@ public class PedidoFormView implements Serializable {
         public Long getProdutoId() { return produtoId; }
         public String getCodigo() { return codigo; }
         public String getDescricao() { return descricao; }
+        public boolean isTemImagem() { return temImagem; }
         public BigDecimal getPreco() { return preco; }
         public Integer getQuantidade() { return quantidade; }
         public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
