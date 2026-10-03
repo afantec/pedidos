@@ -30,6 +30,12 @@ public class Produto implements Serializable {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal preco;
 
+    @Column(name = "imagem")
+    private byte[] imagem;
+
+    @Column(name = "imagem_tipo", length = 100)
+    private String imagemTipo;
+
     @Column(nullable = false)
     private boolean ativo = true;
 
@@ -55,6 +61,12 @@ public class Produto implements Serializable {
 
     public BigDecimal getPreco() { return preco; }
     public void setPreco(BigDecimal preco) { this.preco = preco; }
+
+    public byte[] getImagem() { return imagem; }
+    public void setImagem(byte[] imagem) { this.imagem = imagem; }
+
+    public String getImagemTipo() { return imagemTipo; }
+    public void setImagemTipo(String imagemTipo) { this.imagemTipo = imagemTipo; }
 
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }

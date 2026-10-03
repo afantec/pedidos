@@ -8,6 +8,27 @@
     <ui:define name="titulo">Produtos</ui:define>
 
     <ui:define name="conteudo">
+        <script>
+            function previewImagemProduto(input) {
+                var arquivo = input.files &amp;&amp; input.files[0];
+                var img = input.closest(".campo").querySelector(".preview-imagem");
+                if (!arquivo || !img) {
+                    return;
+                }
+                var leitor = new FileReader();
+                leitor.onload = function () {
+                    img.src = leitor.result;
+                    img.style.display = "block";
+                };
+                leitor.readAsDataURL(arquivo);
+            }
+            document.addEventListener("change", function (evento) {
+                var input = evento.target;
+                if (input &amp;&amp; input.type === "file" &amp;&amp; input.closest("#edicao")) {
+                    previewImagemProduto(input);
+                }
+            });
+        </script>
         <h1>Produtos</h1>
 
         <h:form id="lista">
@@ -21,6 +42,12 @@
 
             <p:dataTable id="tabela" value="#{produtoView.produtos}" var="p" paginator="true" rows="15"
                          emptyMessage="Nenhum produto cadastrado." size="small" stripedRows="true">
+                <p:column headerText="" style="width: 4rem">
+                    <h:panelGroup rendered="#{p.imagemTipo != null}">
+                        <img src="#{request.contextPath}/api/v1/produtos/#{p.id}/imagem?v=#{produtoView.imagemVersao}"
+                             alt="" width="40" height="40" style="object-fit: cover; border-radius: 4px"/>
+                    </h:panelGroup>
+                </p:column>
                 <p:column headerText="Código" sortBy="#{p.codigo}" filterBy="#{p.codigo}"
                           filterMatchMode="contains" style="width: 10rem">
                     #{p.codigo}
@@ -58,7 +85,8 @@
         </h:form>
 
         <p:dialog header="Produto" widgetVar="dlgProduto" modal="true" resizable="false" responsive="true">
-            <h:form id="edicao">
+            <h:form id="edicao" enctype="multipart/form-data">
+                <p:messages closable="true"/>
                 <div class="form-grid">
                     <div class="campo">
                         <p:outputLabel for="codigo" value="Código"/>
@@ -70,9 +98,18 @@
                     </div>
                     <div class="campo">
                         <p:outputLabel for="preco" value="Preço"/>
-                        <p:inputNumber id="preco" value="#{produtoView.edicao.preco}" required="true"
-                                       symbol="R$ " decimalSeparator="," thousandSeparator="." minValue="0"
-                                       decimalPlaces="2"/>
+                        <p:inputNumber id="preco" widgetVar="precoProduto" value="#{produtoView.edicao.preco}"
+                                       required="true" symbol="R$ " decimalSeparator="," decimalSeparatorAlternative="."
+                                       thousandSeparator="" minValue="0" decimalPlaces="2" modifyValueOnWheel="false"/>
+                    </div>
+                    <div class="campo">
+                        <p:outputLabel value="Imagem"/>
+                        <p:fileUpload id="imagem" mode="simple" skinSimple="true" accept="image/*"
+                                      value="#{produtoView.arquivo}" label="Escolher"/>
+                        <img class="preview-imagem" alt=""
+                             src="#{produtoView.temImagemEdicao ? request.contextPath.concat(produtoView.urlImagemEdicao) : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}"
+                             style="max-width: 12rem; max-height: 8rem; object-fit: contain; #{produtoView.temImagemEdicao ? '' : 'display: none'}"/>
+                        <span style="font-size: .85rem; color: #6c757d">PNG, JPEG, WEBP ou GIF, até 2 MB. Sem arquivo novo, a imagem atual permanece.</span>
                     </div>
                     <div class="campo">
                         <p:selectBooleanCheckbox id="ativo" value="#{produtoView.edicao.ativo}" itemLabel="Ativo"/>
@@ -82,7 +119,8 @@
                     <p:commandButton value="Cancelar" type="button" styleClass="ui-button-flat"
                                      onclick="PF('dlgProduto').hide()"/>
                     <p:commandButton value="Salvar" icon="pi pi-check" action="#{produtoView.salvar}"
-                                     process="@form" update="@form :lista:tabela"/>
+                                     process="@form" update="@form :lista:tabela"
+                                     onstart="if (PF('precoProduto')) PF('precoProduto').copyValueToHiddenInput()"/>
                 </div>
             </h:form>
         </p:dialog>

@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +42,18 @@ public class ProdutoController {
     @GetMapping("/{id}")
     public ProdutoResponse buscar(@PathVariable Long id) {
         return ProdutoResponse.de(service.buscar(id));
+    }
+
+    @GetMapping("/{id}/imagem")
+    public ResponseEntity<byte[]> imagem(@PathVariable Long id) {
+        Produto produto = service.buscar(id);
+        if (produto.getImagem() == null || produto.getImagemTipo() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(produto.getImagemTipo()))
+                .cacheControl(CacheControl.noCache())
+                .body(produto.getImagem());
     }
 
     @PostMapping

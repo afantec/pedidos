@@ -1,0 +1,2 @@
+ALTER TABLE produto ADD COLUMN imagem BYTEA;
+ALTER TABLE produto ADD COLUMN imagem_tipo VARCHAR(100);

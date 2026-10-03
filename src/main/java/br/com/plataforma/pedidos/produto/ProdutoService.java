@@ -48,22 +48,32 @@ public class ProdutoService {
 
     @Transactional
     public Produto criar(@Valid ProdutoRequest dados) {
+        return criar(dados, null);
+    }
+
+    @Transactional
+    public Produto criar(@Valid ProdutoRequest dados, ImagemProduto imagem) {
         if (produtos.existsByCodigoIgnoreCase(dados.codigo().trim())) {
             throw new ConflitoException("Já existe produto com o código " + dados.codigo());
         }
         Produto produto = new Produto();
-        preencher(produto, dados);
+        preencher(produto, dados, imagem);
         return produtos.save(produto);
     }
 
     /** O novo preço vale só para pedidos futuros: itens já gravados guardam o preço da época. */
     @Transactional
     public Produto atualizar(Long id, @Valid ProdutoRequest dados) {
+        return atualizar(id, dados, null);
+    }
+
+    @Transactional
+    public Produto atualizar(Long id, @Valid ProdutoRequest dados, ImagemProduto imagem) {
         Produto produto = buscar(id);
         if (produtos.existsByCodigoIgnoreCaseAndIdNot(dados.codigo().trim(), id)) {
             throw new ConflitoException("Já existe produto com o código " + dados.codigo());
         }
-        preencher(produto, dados);
+        preencher(produto, dados, imagem);
         return produto;
     }
 
@@ -76,10 +86,14 @@ public class ProdutoService {
         produtos.delete(produto);
     }
 
-    private static void preencher(Produto produto, ProdutoRequest dados) {
+    private static void preencher(Produto produto, ProdutoRequest dados, ImagemProduto imagem) {
         produto.setCodigo(dados.codigo().trim().toUpperCase());
         produto.setDescricao(dados.descricao().trim());
         produto.setPreco(dados.preco());
         produto.setAtivo(dados.ativo() == null || dados.ativo());
+        if (imagem != null) {
+            produto.setImagem(imagem.conteudo());
+            produto.setImagemTipo(imagem.tipo());
+        }
     }
 }

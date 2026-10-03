@@ -28,6 +28,10 @@ spring:
     web:
       pageable:
         max-page-size: 100
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
 
 joinfaces:
   faces:

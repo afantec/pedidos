@@ -21,13 +21,13 @@ public final class ProdutoDtos {
             Boolean ativo) {
     }
 
-    /** TESTE **/
     public record ProdutoResponse(
-            Long id, String codigo, String descricao, BigDecimal preco, boolean ativo, OffsetDateTime criadoEm) {
+            Long id, String codigo, String descricao, BigDecimal preco, boolean ativo, boolean temImagem,
+            OffsetDateTime criadoEm) {
 
         static ProdutoResponse de(Produto p) {
             return new ProdutoResponse(p.getId(), p.getCodigo(), p.getDescricao(), p.getPreco(),
-                    p.isAtivo(), p.getCriadoEm());
+                    p.isAtivo(), p.getImagemTipo() != null, p.getCriadoEm());
         }
     }
 }
